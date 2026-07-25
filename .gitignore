@@ -1,0 +1,13 @@
+# ============================================================
+# Cinema Microservices — .gitignore raíz
+# ============================================================
+
+# Variables de entorno (secretos) — usar .env.example como template
+.env
+
+# Logs
+*.log
+logs/
+
+# Docker volumes locales (si se usan bind mounts)
+.docker-data/

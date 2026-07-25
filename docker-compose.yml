@@ -1,0 +1,118 @@
+# ============================================================
+# Cinema Microservices — Docker Compose
+# Uso: docker compose up -d
+# ============================================================
+
+name: cinema
+
+services:
+
+  # ----------------------------------------------------------
+  # PostgreSQL — Base de datos del auth-service
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: cinema-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-auth_db}
+      POSTGRES_USER: ${POSTGRES_USER:-auth_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auth_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-auth_user} -d ${POSTGRES_DB:-auth_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ----------------------------------------------------------
+  # LavinMQ — Message broker (AMQP, fork ligero de RabbitMQ)
+  # Management UI: http://localhost:15672
+  # ----------------------------------------------------------
+  lavinmq:
+    image: cloudamqp/lavinmq:pr-2152
+    container_name: cinema-lavinmq
+    restart: unless-stopped
+    environment:
+      LAVINMQ_DEFAULT_USER: ${LAVINMQ_DEFAULT_USER:-admin}
+      LAVINMQ_DEFAULT_PASS: ${LAVINMQ_DEFAULT_PASS:-admin123}
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - lavinmq_data:/var/lib/lavinmq
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "lavinmqctl", "status"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ----------------------------------------------------------
+  # Valkey — Cache y sesiones (fork open-source de Redis)
+  # Compatible al 100% con la API de Redis
+  # ----------------------------------------------------------
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: cinema-valkey
+    restart: unless-stopped
+    command: >
+      valkey-server
+      --requirepass ${VALKEY_PASSWORD:-valkey_pass}
+      --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    networks:
+      - cinema-network
+
+  # ----------------------------------------------------------
+  # Auth Service — Microservicio de autenticación (Spring Boot)
+  # Espera a que PostgreSQL esté healthy antes de arrancar
+  # ----------------------------------------------------------
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: cinema-auth-service
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/auth_db}
+      DB_USERNAME: ${DB_USERNAME:-auth_user}
+      DB_PASSWORD: ${DB_PASSWORD:-auth_pass}
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    networks:
+      - cinema-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+# ============================================================
+# Volumes — Persistencia de datos entre reinicios
+# ============================================================
+volumes:
+  postgres_data:
+    driver: local
+  lavinmq_data:
+    driver: local
+  valkey_data:
+    driver: local
+
+# ============================================================
+# Networks — Red aislada para comunicación inter-servicios
+# ============================================================
+networks:
+  cinema-network:
+    driver: bridge
