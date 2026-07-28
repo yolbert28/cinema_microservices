@@ -5,7 +5,7 @@ CREATE TABLE outbox
     aggregate_type VARCHAR     NOT NULL,
     event_type     VARCHAR     NOT NULL,
     payload        JSONB       NOT NULL,
-    status         VARCHAR     NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'COMPLETE', 'FAIL')),
+    status         VARCHAR     NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PUBLISHED', 'FAILED')),
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );

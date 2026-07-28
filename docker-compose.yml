@@ -39,9 +39,7 @@ services:
     image: cloudamqp/lavinmq:pr-2152
     container_name: cinema-lavinmq
     restart: unless-stopped
-    environment:
-      LAVINMQ_DEFAULT_USER: ${LAVINMQ_DEFAULT_USER:-admin}
-      LAVINMQ_DEFAULT_PASS: ${LAVINMQ_DEFAULT_PASS:-admin123}
+    environment: {}
     ports:
       - "5672:5672"   # AMQP
       - "15672:15672" # Management UI
@@ -91,6 +89,13 @@ services:
       DB_USERNAME: ${DB_USERNAME:-auth_user}
       DB_PASSWORD: ${DB_PASSWORD:-auth_pass}
       SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
+      JWT_REFRESH_EXPIRATION_DAYS: ${JWT_REFRESH_EXPIRATION_DAYS:-7}
+      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS:-5}
+      LOCKOUT_DURATION_MINUTES: ${LOCKOUT_DURATION_MINUTES:-15}
+      OTP_EXPIRATION_MINUTES: ${OTP_EXPIRATION_MINUTES:-10}
+      OTP_MAX_ATTEMPTS: ${OTP_MAX_ATTEMPTS:-5}
     ports:
       - "${SERVER_PORT:-8080}:8080"
     networks:
