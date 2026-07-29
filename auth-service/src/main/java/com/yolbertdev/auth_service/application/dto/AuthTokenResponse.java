@@ -1,5 +1,6 @@
 package com.yolbertdev.auth_service.application.dto;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.Getter;
 @Schema(description = "JWT tokens returned after a successful login or token refresh")
 @Getter
 @Builder
+@JsonPropertyOrder({"accessToken", "refreshToken", "accessTokenExpiresIn"})
 public class AuthTokenResponse {
 
     @Schema(description = "Short-lived JWT access token — include in the Authorization header as Bearer <token>",

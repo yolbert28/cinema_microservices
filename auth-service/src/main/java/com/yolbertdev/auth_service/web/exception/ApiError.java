@@ -5,8 +5,11 @@ import lombok.Getter;
 
 import java.time.OffsetDateTime;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 @Getter
 @Builder
+@JsonPropertyOrder({ "status", "error", "message", "timestamp" })
 public class ApiError {
 
     private int status;
