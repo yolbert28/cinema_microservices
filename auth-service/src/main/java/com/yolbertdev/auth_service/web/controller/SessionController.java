@@ -3,6 +3,7 @@ package com.yolbertdev.auth_service.web.controller;
 import com.yolbertdev.auth_service.application.dto.SessionResponse;
 import com.yolbertdev.auth_service.application.usecase.ListActiveSessionsUseCase;
 import com.yolbertdev.auth_service.application.usecase.LogoutUseCase;
+import com.yolbertdev.auth_service.web.docs.SessionApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auth/sessions")
 @RequiredArgsConstructor
-public class SessionController {
+public class SessionController implements SessionApi {
 
     private final ListActiveSessionsUseCase listActiveSessionsUseCase;
     private final LogoutUseCase logoutUseCase;

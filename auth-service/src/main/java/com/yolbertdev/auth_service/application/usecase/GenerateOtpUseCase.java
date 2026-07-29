@@ -1,10 +1,13 @@
 package com.yolbertdev.auth_service.application.usecase;
 
 import com.yolbertdev.auth_service.application.dto.OtpResponse;
+import com.yolbertdev.auth_service.application.exception.UserNotFoundException;
 import com.yolbertdev.auth_service.domain.enums.OtpPurpose;
 import com.yolbertdev.auth_service.domain.enums.OtpStatus;
 import com.yolbertdev.auth_service.domain.model.Otp;
+import com.yolbertdev.auth_service.domain.model.User;
 import com.yolbertdev.auth_service.domain.repository.OtpRepository;
+import com.yolbertdev.auth_service.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,10 +22,26 @@ import java.util.UUID;
 public class GenerateOtpUseCase {
 
     private final OtpRepository otpRepository;
+    private final UserRepository userRepository;
 
     @Value("${auth.otp.expiration-minutes:10}")
     private int expirationMinutes;
 
+    /**
+     * Generates an OTP for a user identified by their email address.
+     * Used by public endpoints where the caller does not know the user's UUID.
+     */
+    @Transactional
+    public OtpResponse execute(String email, OtpPurpose purpose) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
+        return execute(user.getId(), purpose);
+    }
+
+    /**
+     * Generates an OTP for a user identified by their UUID.
+     * Used internally (e.g. post-registration flow).
+     */
     @Transactional
     public OtpResponse execute(UUID userId, OtpPurpose purpose) {
 

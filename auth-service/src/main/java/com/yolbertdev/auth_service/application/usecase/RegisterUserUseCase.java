@@ -29,7 +29,7 @@ public class RegisterUserUseCase {
     @Transactional
     public void execute(RegisterUserCommand command) {
         if (userRepository.findByEmail(command.getEmail()).isPresent()) {
-            throw new EmailAlreadyTakenException(command.getEmail());
+            throw new EmailAlreadyTakenException();
         }
 
         OffsetDateTime now = OffsetDateTime.now();
@@ -57,7 +57,6 @@ public class RegisterUserUseCase {
                 Map.of(
                         "userId", user.getId().toString(),
                         "email", user.getEmail(),
-                        "name", user.getName()
-                )));
+                        "name", user.getName())));
     }
 }

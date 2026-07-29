@@ -8,9 +8,11 @@ public interface TokenProvider {
 
     String generateAccessToken(UUID userId, String email, UserRole role);
 
-    String generateRefreshToken();
+    String generateRefreshToken(UUID sessionId);
 
-    String hashRefreshToken(String refreshToken);
+    String extractJti(String refreshToken);
+
+    UUID extractSessionId(String refreshToken);
 
     UUID extractUserId(String accessToken);
 

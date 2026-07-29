@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public interface JpaSessionRepository extends JpaRepository<SessionEntity, UUID> {
 
-    Optional<SessionEntity> findByRefreshTokenHashAndRevokedFalse(String refreshTokenHash);
+    Optional<SessionEntity> findByJtiAndRevokedFalse(String jti);
 
     List<SessionEntity> findByUserIdAndRevokedFalse(UUID userId);
 

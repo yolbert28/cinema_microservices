@@ -32,8 +32,8 @@ public class SessionEntity {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "refresh_token_hash", nullable = false)
-    private String refreshTokenHash;
+    @Column(name = "jti", nullable = false, unique = true)
+    private String jti;
 
     @Column(name = "device_id", nullable = false)
     private String deviceId;
@@ -45,7 +45,7 @@ public class SessionEntity {
     @Column(name = "user_agent")
     private String userAgent;
 
-    @Column(name = "ip_address", columnDefinition = "inet")
+    @Column(name = "ip_address")
     private String ipAddress;
 
     @Column(name = "revoked", nullable = false)

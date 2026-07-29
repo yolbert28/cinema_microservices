@@ -8,6 +8,7 @@ import com.yolbertdev.auth_service.domain.enums.OtpPurpose;
 import com.yolbertdev.auth_service.domain.model.Otp;
 import com.yolbertdev.auth_service.domain.model.User;
 import com.yolbertdev.auth_service.domain.repository.OtpRepository;
+import com.yolbertdev.auth_service.domain.repository.SessionRepository;
 import com.yolbertdev.auth_service.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +23,7 @@ public class ResetPasswordUseCase {
 
     private final OtpRepository otpRepository;
     private final UserRepository userRepository;
+    private final SessionRepository sessionRepository;
     private final PasswordEncoderPort passwordEncoder;
 
     @Transactional
@@ -38,9 +40,11 @@ public class ResetPasswordUseCase {
         otpRepository.save(otp);
 
         User user = userRepository.findById(command.getUserId())
-                .orElseThrow(() -> new UserNotFoundException(command.getUserId()));
+                .orElseThrow(UserNotFoundException::new);
 
         user.changePassword(passwordEncoder.encode(command.getNewPassword()));
         userRepository.save(user);
+
+        sessionRepository.revokeAllByUserId(user.getId());
     }
 }

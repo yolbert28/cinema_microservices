@@ -3,6 +3,7 @@ package com.yolbertdev.auth_service.application.usecase;
 import com.yolbertdev.auth_service.application.dto.ValidateOtpCommand;
 import com.yolbertdev.auth_service.application.exception.InvalidOtpException;
 import com.yolbertdev.auth_service.application.exception.OtpMaxAttemptsExceededException;
+import com.yolbertdev.auth_service.application.exception.UserNotFoundException;
 import com.yolbertdev.auth_service.domain.enums.OtpPurpose;
 import com.yolbertdev.auth_service.domain.model.Otp;
 import com.yolbertdev.auth_service.domain.repository.OtpRepository;
@@ -10,6 +11,7 @@ import com.yolbertdev.auth_service.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,8 +29,12 @@ public class ValidateOtpUseCase {
 
     @Transactional
     public void execute(ValidateOtpCommand command) {
+        UUID userId = userRepository.findByEmail(command.getEmail())
+                .orElseThrow(UserNotFoundException::new)
+                .getId();
+
         Otp otp = otpRepository
-                .findActiveByUserIdAndPurpose(command.getUserId(), command.getPurpose())
+                .findActiveByUserIdAndPurpose(userId, command.getPurpose())
                 .orElseThrow(InvalidOtpException::new);
 
         if (otp.isExpired()) {
@@ -48,7 +54,7 @@ public class ValidateOtpUseCase {
         otpRepository.save(otp);
 
         if (command.getPurpose() == OtpPurpose.EMAIL_VERIFICATION) {
-            userRepository.findById(command.getUserId()).ifPresent(user -> {
+            userRepository.findById(userId).ifPresent(user -> {
                 user.verifyEmail();
                 userRepository.save(user);
             });

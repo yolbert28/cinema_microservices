@@ -19,7 +19,7 @@ public class Session {
 
     private UUID id;
     private UUID userId;
-    private String refreshTokenHash;
+    private String jti;
     private String deviceId;
     private DeviceOs deviceOs;
     private String userAgent;
@@ -31,8 +31,9 @@ public class Session {
     private OffsetDateTime updatedAt;
     private OffsetDateTime expiresAt;
 
-    public static Session create(UUID userId,
-            String refreshTokenHash,
+    public static Session create(UUID id,
+            UUID userId,
+            String jti,
             String deviceId,
             DeviceOs deviceOs,
             String userAgent,
@@ -40,9 +41,9 @@ public class Session {
             int expirationDays) {
         OffsetDateTime now = OffsetDateTime.now();
         return Session.builder()
-                .id(UUID.randomUUID())
+                .id(id)
                 .userId(userId)
-                .refreshTokenHash(refreshTokenHash)
+                .jti(jti)
                 .deviceId(deviceId)
                 .deviceOs(deviceOs)
                 .userAgent(userAgent)

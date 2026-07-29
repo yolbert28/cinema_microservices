@@ -19,10 +19,10 @@ public class LogoutUseCase {
     @Transactional
     public void execute(UUID userId, UUID sessionId) {
         Session session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new SessionNotFoundException(sessionId));
+                .orElseThrow(SessionNotFoundException::new);
 
         if (!Objects.equals(session.getUserId(), userId)) {
-            throw new SessionNotFoundException(sessionId);
+            throw new SessionNotFoundException();
         }
 
         session.revoke();

@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface SessionRepository {
 
-    Optional<Session> findActiveByRefreshTokenHash(String refreshTokenHash);
+    Optional<Session> findActiveByJti(String jti);
 
     List<Session> findActiveByUserId(UUID userId);
 

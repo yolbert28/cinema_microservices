@@ -45,22 +45,32 @@ public class JwtTokenProvider implements TokenProvider {
                 .compact();
     }
 
+    @Value("${jwt.refresh-expiration-days:7}")
+    private long refreshExpirationDays;
+
     @Override
-    public String generateRefreshToken() {
-        byte[] bytes = new byte[64];
-        new SecureRandom().nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    public String generateRefreshToken(UUID sessionId) {
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .claim("sessionId", sessionId.toString())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + (refreshExpirationDays * 24L * 60L * 60L * 1000L)))
+                .signWith(getSigningKey())
+                .compact();
     }
 
     @Override
-    public String hashRefreshToken(String refreshToken) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(refreshToken.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 not available", e);
+    public String extractJti(String token) {
+        return parseClaims(token).getId();
+    }
+
+    @Override
+    public UUID extractSessionId(String token) {
+        String sessionIdStr = parseClaims(token).get("sessionId", String.class);
+        if (sessionIdStr == null) {
+            throw new JwtException("Session ID missing in refresh token");
         }
+        return UUID.fromString(sessionIdStr);
     }
 
     @Override

@@ -39,7 +39,6 @@ public class RequestPasswordResetUseCase {
                 Map.of(
                         "userId", user.getId().toString(),
                         "email", user.getEmail(),
-                        "expiresAt", otpResponse.getExpiresAt().toString()
-                )));
+                        "expiresAt", otpResponse.getExpiresAt().toString())));
     }
 }

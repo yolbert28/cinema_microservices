@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenUseCase {
@@ -23,18 +25,37 @@ public class RefreshTokenUseCase {
 
     @Transactional
     public AuthTokenResponse execute(RefreshTokenCommand command) {
-        String tokenHash = tokenProvider.hashRefreshToken(command.getRefreshToken());
+        String rawToken = command.getRefreshToken();
+        UUID sessionId;
+        String jti;
 
-        Session session = sessionRepository.findActiveByRefreshTokenHash(tokenHash)
+        try {
+            sessionId = tokenProvider.extractSessionId(rawToken);
+            jti = tokenProvider.extractJti(rawToken);
+        } catch (Exception e) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(InvalidRefreshTokenException::new);
 
         if (!session.isValid()) {
             throw new InvalidRefreshTokenException();
         }
 
-        User user = userRepository.findById(session.getUserId())
-                .orElseThrow(() -> new UserNotFoundException(session.getUserId()));
+        if (!jti.equals(session.getJti())) {
+            session.revoke();
+            sessionRepository.save(session);
+            throw new InvalidRefreshTokenException();
+        }
 
+        User user = userRepository.findById(session.getUserId())
+                .orElseThrow(UserNotFoundException::new);
+
+        String newRefreshToken = tokenProvider.generateRefreshToken(sessionId);
+        String newJti = tokenProvider.extractJti(newRefreshToken);
+
+        session.setJti(newJti);
         session.touch();
         sessionRepository.save(session);
 
@@ -42,7 +63,7 @@ public class RefreshTokenUseCase {
 
         return AuthTokenResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(command.getRefreshToken())
+                .refreshToken(newRefreshToken)
                 .accessTokenExpiresIn(tokenProvider.getAccessTokenExpiresIn())
                 .build();
     }

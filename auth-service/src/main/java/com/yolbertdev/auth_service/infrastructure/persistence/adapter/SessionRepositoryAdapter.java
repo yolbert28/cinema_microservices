@@ -19,8 +19,8 @@ public class SessionRepositoryAdapter implements SessionRepository {
     private final JpaSessionRepository jpa;
 
     @Override
-    public Optional<Session> findActiveByRefreshTokenHash(String refreshTokenHash) {
-        return jpa.findByRefreshTokenHashAndRevokedFalse(refreshTokenHash)
+    public Optional<Session> findActiveByJti(String jti) {
+        return jpa.findByJtiAndRevokedFalse(jti)
                 .map(SessionMapper::toDomain);
     }
 

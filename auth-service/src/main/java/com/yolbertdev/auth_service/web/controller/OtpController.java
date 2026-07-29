@@ -1,31 +1,25 @@
 package com.yolbertdev.auth_service.web.controller;
 
 import com.yolbertdev.auth_service.application.dto.OtpResponse;
+import com.yolbertdev.auth_service.application.dto.ResetPasswordCommand;
 import com.yolbertdev.auth_service.application.dto.ValidateOtpCommand;
 import com.yolbertdev.auth_service.application.usecase.GenerateOtpUseCase;
 import com.yolbertdev.auth_service.application.usecase.RequestPasswordResetUseCase;
 import com.yolbertdev.auth_service.application.usecase.ResetPasswordUseCase;
-import com.yolbertdev.auth_service.application.dto.ResetPasswordCommand;
 import com.yolbertdev.auth_service.application.usecase.ValidateOtpUseCase;
-import com.yolbertdev.auth_service.domain.enums.OtpPurpose;
+import com.yolbertdev.auth_service.web.docs.OtpApi;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class OtpController {
+public class OtpController implements OtpApi {
 
     private final ValidateOtpUseCase validateOtpUseCase;
     private final GenerateOtpUseCase generateOtpUseCase;
@@ -39,10 +33,8 @@ public class OtpController {
     }
 
     @PostMapping("/otp/resend")
-    public ResponseEntity<OtpResponse> resendOtp(
-            @AuthenticationPrincipal UUID userId,
-            @Valid @RequestBody ResendOtpRequest request) {
-        OtpResponse response = generateOtpUseCase.execute(userId, request.purpose());
+    public ResponseEntity<OtpResponse> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        OtpResponse response = generateOtpUseCase.execute(request.email(), request.purpose());
         return ResponseEntity.ok(response);
     }
 
@@ -56,11 +48,5 @@ public class OtpController {
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordCommand command) {
         resetPasswordUseCase.execute(command);
         return ResponseEntity.ok().build();
-    }
-
-    record ResendOtpRequest(@NotNull OtpPurpose purpose) {
-    }
-
-    record PasswordResetRequest(@NotBlank @Email String email) {
     }
 }

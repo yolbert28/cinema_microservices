@@ -8,6 +8,7 @@ import com.yolbertdev.auth_service.application.usecase.LoginUseCase;
 import com.yolbertdev.auth_service.application.usecase.LogoutUseCase;
 import com.yolbertdev.auth_service.application.usecase.RefreshTokenUseCase;
 import com.yolbertdev.auth_service.application.usecase.RegisterUserUseCase;
+import com.yolbertdev.auth_service.web.docs.AuthApi;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthApi {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUseCase loginUseCase;

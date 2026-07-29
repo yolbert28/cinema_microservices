@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -62,12 +63,15 @@ public class LoginUseCase {
         userRepository.save(user);
 
         String accessToken = tokenProvider.generateAccessToken(user.getId(), user.getEmail(), user.getRole());
-        String refreshToken = tokenProvider.generateRefreshToken();
-        String refreshTokenHash = tokenProvider.hashRefreshToken(refreshToken);
+
+        UUID sessionId = UUID.randomUUID();
+        String refreshToken = tokenProvider.generateRefreshToken(sessionId);
+        String jti = tokenProvider.extractJti(refreshToken);
 
         Session session = Session.create(
+                sessionId,
                 user.getId(),
-                refreshTokenHash,
+                jti,
                 command.getDeviceId(),
                 command.getDeviceOs(),
                 command.getUserAgent(),
