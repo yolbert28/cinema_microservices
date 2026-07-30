@@ -23,8 +23,8 @@ public class ValidateOtpCommand {
     @Email
     private String email;
 
-    @Schema(description = "Purpose of the OTP to validate", example = "EMAIL_VERIFICATION",
-            allowableValues = {"EMAIL_VERIFICATION", "PASSWORD_RESET", "LOGIN_VERIFICATION"})
+    @Schema(description = "Purpose of the OTP to validate", example = "EMAIL_VERIFICATION", allowableValues = {
+            "EMAIL_VERIFICATION", "PASSWORD_RESET", "LOGIN_VERIFICATION"})
     @NotNull
     private OtpPurpose purpose;
 

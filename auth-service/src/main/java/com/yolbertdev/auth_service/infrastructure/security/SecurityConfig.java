@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/api/auth/otp/validate",
                                 "/api/auth/otp/resend")
                         .permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/auth/user/*/role").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

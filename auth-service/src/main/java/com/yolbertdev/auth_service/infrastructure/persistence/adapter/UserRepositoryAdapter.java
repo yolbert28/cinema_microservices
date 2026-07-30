@@ -1,5 +1,6 @@
 package com.yolbertdev.auth_service.infrastructure.persistence.adapter;
 
+import com.yolbertdev.auth_service.domain.enums.UserRole;
 import com.yolbertdev.auth_service.domain.model.User;
 import com.yolbertdev.auth_service.domain.repository.UserRepository;
 import com.yolbertdev.auth_service.infrastructure.persistence.jpa.JpaUserRepository;
@@ -24,6 +25,11 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public Optional<User> findById(UUID id) {
         return jpa.findById(id).map(UserMapper::toDomain);
+    }
+
+    @Override
+    public void updateRoleById(UUID id, UserRole role) {
+        jpa.updateRoleById(id, role);
     }
 
     @Override

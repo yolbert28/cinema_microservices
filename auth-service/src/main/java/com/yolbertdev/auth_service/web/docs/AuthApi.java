@@ -51,6 +51,26 @@ public interface AuthApi {
     })
     ResponseEntity<Void> register(@Valid @RequestBody RegisterUserCommand command);
 
+    // ── PATCH /api/auth/user/{id}/role ────────────────────────────────────────
+
+    @Operation(
+            summary = "Update user role",
+            description = "Updates the role of a specific user by their ID.",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Role updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<Void> updateRole(
+            @org.springframework.web.bind.annotation.PathVariable("id") UUID id,
+            @Valid @RequestBody com.yolbertdev.auth_service.application.dto.UpdateRoleCommand command);
+
     // ── POST /api/auth/login ──────────────────────────────────────────────────
 
     @Operation(
@@ -129,4 +149,19 @@ public interface AuthApi {
             UUID userId,
             @RequestParam(required = false) UUID sessionId,
             @RequestParam(defaultValue = "false") boolean all);
+
+    // ── GET /api/auth/user ────────────────────────────────────────────────────
+
+    @Operation(
+            summary = "Get user information by email",
+            description = "Retrieves the user's basic information (ID, name, role, status) using their email address.",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User found",
+                    content = @Content(schema = @Schema(implementation = com.yolbertdev.auth_service.application.dto.UserResponse.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<com.yolbertdev.auth_service.application.dto.UserResponse> getUserByEmail(@RequestParam("email") String email);
 }

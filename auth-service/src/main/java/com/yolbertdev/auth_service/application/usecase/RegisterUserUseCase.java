@@ -4,6 +4,7 @@ import com.yolbertdev.auth_service.application.dto.RegisterUserCommand;
 import com.yolbertdev.auth_service.application.exception.EmailAlreadyTakenException;
 import com.yolbertdev.auth_service.application.port.PasswordEncoderPort;
 import com.yolbertdev.auth_service.domain.enums.OtpPurpose;
+import com.yolbertdev.auth_service.domain.enums.UserRole;
 import com.yolbertdev.auth_service.domain.enums.UserStatus;
 import com.yolbertdev.auth_service.domain.model.OutboxEvent;
 import com.yolbertdev.auth_service.domain.model.User;
@@ -39,7 +40,7 @@ public class RegisterUserUseCase {
                 .lastname(command.getLastname())
                 .email(command.getEmail())
                 .password(passwordEncoder.encode(command.getPassword()))
-                .role(command.getRole())
+                .role(UserRole.CLIENT)
                 .status(UserStatus.PENDING)
                 .failedLoginAttempts(0)
                 .createdAt(now)
