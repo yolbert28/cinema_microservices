@@ -28,8 +28,11 @@ public class ResetPasswordUseCase {
 
     @Transactional
     public void execute(ResetPasswordCommand command) {
+
+        User user = userRepository.findByEmail(command.getEmail()).orElseThrow(UserNotFoundException::new);
+
         Otp otp = otpRepository
-                .findActiveByUserIdAndPurpose(command.getUserId(), OtpPurpose.PASSWORD_RESET)
+                .findActiveByUserIdAndPurpose(user.getId(), OtpPurpose.PASSWORD_RESET)
                 .orElseThrow(InvalidOtpException::new);
 
         if (otp.isExpired() || !Objects.equals(otp.getCode(), command.getOtpCode())) {
@@ -38,9 +41,6 @@ public class ResetPasswordUseCase {
 
         otp.markAsUsed();
         otpRepository.save(otp);
-
-        User user = userRepository.findById(command.getUserId())
-                .orElseThrow(UserNotFoundException::new);
 
         user.changePassword(passwordEncoder.encode(command.getNewPassword()));
         userRepository.save(user);
