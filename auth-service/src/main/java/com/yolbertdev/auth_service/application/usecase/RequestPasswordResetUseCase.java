@@ -1,6 +1,7 @@
 package com.yolbertdev.auth_service.application.usecase;
 
 import com.yolbertdev.auth_service.application.dto.OtpResponse;
+import com.yolbertdev.auth_service.application.exception.UserNotFoundException;
 import com.yolbertdev.auth_service.domain.enums.OtpPurpose;
 import com.yolbertdev.auth_service.domain.model.OutboxEvent;
 import com.yolbertdev.auth_service.domain.model.User;
@@ -22,14 +23,10 @@ public class RequestPasswordResetUseCase {
     private final GenerateOtpUseCase generateOtpUseCase;
 
     @Transactional
-    public void execute(String email) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
+    public OtpResponse execute(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
 
-        if (userOpt.isEmpty()) {
-            return;
-        }
-
-        User user = userOpt.get();
         OtpResponse otpResponse = generateOtpUseCase.execute(user.getId(), OtpPurpose.PASSWORD_RESET);
 
         outboxRepository.save(OutboxEvent.create(
@@ -40,5 +37,7 @@ public class RequestPasswordResetUseCase {
                         "userId", user.getId().toString(),
                         "email", user.getEmail(),
                         "expiresAt", otpResponse.getExpiresAt().toString())));
+
+        return otpResponse;
     }
 }

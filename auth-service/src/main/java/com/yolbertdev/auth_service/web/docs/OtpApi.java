@@ -43,7 +43,6 @@ public interface OtpApi {
                     | Purpose | Effect on success |
                     |---|---|
                     | `EMAIL_VERIFICATION` | Sets `email_verified_at`; activates the account |
-                    | `PASSWORD_RESET` | Authorises the subsequent `/password/reset` call |
                     | `LOGIN_VERIFICATION` | Completes the 2FA step after a successful login |
 
                     **This endpoint is public** — no JWT required.
@@ -76,19 +75,19 @@ public interface OtpApi {
                     **This endpoint is public** — no JWT token required.  It is meant
                     to be used:
                     - Before the first login, to re-send the `EMAIL_VERIFICATION` code.
+                    - After a successful login, to re-send the `LOGIN_VERIFICATION` code for 2FA.
                     - During the password-reset flow, to re-send a `PASSWORD_RESET` code.
                     """
     )
     @SecurityRequirements()
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "New OTP generated — sent via the configured channel",
-                    content = @Content(schema = @Schema(implementation = OtpResponse.class))),
+            @ApiResponse(responseCode = "200", description = "Request processed — if the email exists, a new OTP has been sent via the configured channel"),
             @ApiResponse(responseCode = "400", description = "Missing or invalid fields",
                     content = @Content(schema = @Schema(implementation = ApiError.class))),
-            @ApiResponse(responseCode = "404", description = "User not found",
+            @ApiResponse(responseCode = "429", description = "Too Many Requests - Cooldown or rate limit exceeded",
                     content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<OtpResponse> resendOtp(@Valid @RequestBody ResendOtpRequest request);
+    ResponseEntity<Void> resendOtp(@Valid @RequestBody ResendOtpRequest request);
 
     // ── POST /api/auth/password/reset-request ─────────────────────────────────
 
@@ -109,7 +108,7 @@ public interface OtpApi {
             @ApiResponse(responseCode = "400", description = "Email address is missing or malformed",
                     content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request);
+    ResponseEntity<OtpResponse> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request);
 
     // ── POST /api/auth/password/reset ─────────────────────────────────────────
 

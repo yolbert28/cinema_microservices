@@ -33,4 +33,21 @@ public class OtpRepositoryAdapter implements OtpRepository {
     public Otp save(Otp otp) {
         return OtpMapper.toDomain(jpa.save(OtpMapper.toEntity(otp)));
     }
+
+    @Override
+    public Optional<Otp> findLatestByUserId(UUID userId) {
+        return jpa.findFirstByUserIdOrderByCreatedAtDesc(userId)
+                .map(OtpMapper::toDomain);
+    }
+
+    @Override
+    public Optional<Otp> findLatestByUserIdAndPurpose(UUID userId, OtpPurpose purpose) {
+        return jpa.findFirstByUserIdAndPurposeOrderByCreatedAtDesc(userId, purpose)
+                .map(OtpMapper::toDomain);
+    }
+
+    @Override
+    public long countByUserIdAndCreatedAtAfter(UUID userId, java.time.OffsetDateTime timestamp) {
+        return jpa.countByUserIdAndCreatedAtAfter(userId, timestamp);
+    }
 }

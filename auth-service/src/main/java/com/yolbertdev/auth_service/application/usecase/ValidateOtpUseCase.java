@@ -29,12 +29,17 @@ public class ValidateOtpUseCase {
 
     @Transactional
     public void execute(ValidateOtpCommand command) {
+
+        if (command.getPurpose() == OtpPurpose.PASSWORD_RESET) {
+            throw new InvalidOtpException("This endpoint is intended for 2FA validation only. Use the password-reset endpoint to validate PASSWORD_RESET codes");
+        }
+
         UUID userId = userRepository.findByEmail(command.getEmail())
                 .orElseThrow(UserNotFoundException::new)
                 .getId();
 
         Otp otp = otpRepository
-                .findActiveByUserIdAndPurpose(userId, command.getPurpose())
+                .findActiveByUserIdAndPurpose(userId,command.getPurpose())
                 .orElseThrow(InvalidOtpException::new);
 
         if (otp.isExpired()) {

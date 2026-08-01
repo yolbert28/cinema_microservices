@@ -3,8 +3,8 @@ package com.yolbertdev.auth_service.web.controller;
 import com.yolbertdev.auth_service.application.dto.OtpResponse;
 import com.yolbertdev.auth_service.application.dto.ResetPasswordCommand;
 import com.yolbertdev.auth_service.application.dto.ValidateOtpCommand;
-import com.yolbertdev.auth_service.application.usecase.GenerateOtpUseCase;
 import com.yolbertdev.auth_service.application.usecase.RequestPasswordResetUseCase;
+import com.yolbertdev.auth_service.application.usecase.ResendOtpUseCase;
 import com.yolbertdev.auth_service.application.usecase.ResetPasswordUseCase;
 import com.yolbertdev.auth_service.application.usecase.ValidateOtpUseCase;
 import com.yolbertdev.auth_service.web.docs.OtpApi;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OtpController implements OtpApi {
 
     private final ValidateOtpUseCase validateOtpUseCase;
-    private final GenerateOtpUseCase generateOtpUseCase;
+    private final ResendOtpUseCase resendOtpUseCase;
     private final RequestPasswordResetUseCase requestPasswordResetUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
 
@@ -33,15 +33,14 @@ public class OtpController implements OtpApi {
     }
 
     @PostMapping("/otp/resend")
-    public ResponseEntity<OtpResponse> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
-        OtpResponse response = generateOtpUseCase.execute(request.email(), request.purpose());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Void> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        resendOtpUseCase.execute(request.email(), request.purpose());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/password/reset-request")
-    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
-        requestPasswordResetUseCase.execute(request.email());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<OtpResponse> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        return ResponseEntity.ok(requestPasswordResetUseCase.execute(request.email()));
     }
 
     @PostMapping("/password/reset")

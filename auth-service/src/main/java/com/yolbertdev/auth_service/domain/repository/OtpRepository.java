@@ -13,4 +13,10 @@ public interface OtpRepository {
     void cancelActiveByUserIdAndPurpose(UUID userId, OtpPurpose purpose);
 
     Otp save(Otp otp);
+
+    Optional<Otp> findLatestByUserId(UUID userId);
+
+    Optional<Otp> findLatestByUserIdAndPurpose(UUID userId, OtpPurpose purpose);
+
+    long countByUserIdAndCreatedAtAfter(UUID userId, java.time.OffsetDateTime timestamp);
 }

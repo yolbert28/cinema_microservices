@@ -41,4 +41,21 @@ public interface JpaOtpRepository extends JpaRepository<OtpEntity, UUID> {
             @Param("fromStatus") OtpStatus fromStatus,
             @Param("toStatus") OtpStatus toStatus
     );
+
+    Optional<OtpEntity> findFirstByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    @Query("""
+            SELECT o FROM OtpEntity o
+            WHERE o.userId = :userId
+              AND o.purpose = :purpose
+            ORDER BY o.createdAt DESC
+            LIMIT 1
+            """)
+    Optional<OtpEntity> findFirstByUserIdAndPurposeOrderByCreatedAtDesc(
+            @Param("userId") UUID userId,
+            @Param("purpose") OtpPurpose purpose
+    );
+
+    @Query("SELECT COUNT(o) FROM OtpEntity o WHERE o.userId = :userId AND o.createdAt >= :timestamp")
+    long countByUserIdAndCreatedAtAfter(@Param("userId") UUID userId, @Param("timestamp") java.time.OffsetDateTime timestamp);
 }

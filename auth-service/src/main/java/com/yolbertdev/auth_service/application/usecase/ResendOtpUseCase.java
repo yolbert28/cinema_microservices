@@ -1,6 +1,6 @@
 package com.yolbertdev.auth_service.application.usecase;
 
-import com.yolbertdev.auth_service.application.dto.OtpResponse;
+import com.yolbertdev.auth_service.application.exception.NoPreviousOtpException;
 import com.yolbertdev.auth_service.application.exception.OtpRateLimitExceededException;
 import com.yolbertdev.auth_service.application.exception.UserNotFoundException;
 import com.yolbertdev.auth_service.domain.enums.OtpPurpose;
@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class GenerateOtpUseCase {
+public class ResendOtpUseCase {
 
     private final OtpRepository otpRepository;
     private final UserRepository userRepository;
@@ -36,30 +36,33 @@ public class GenerateOtpUseCase {
     private int maxPerHour;
 
     /**
-     * Generates an OTP for a user identified by their email address.
-     * Used by public endpoints where the caller does not know the user's UUID.
+     * Grace period (in minutes) after OTP expiration during which a resend is still allowed.
+     * After this window, the user must restart the flow from scratch.
      */
+    @Value("${auth.otp.resend-grace-minutes:5}")
+    private int resendGraceMinutes;
+
     @Transactional
-    public OtpResponse execute(String email, OtpPurpose purpose) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(UserNotFoundException::new);
-        return execute(user.getId(), purpose);
-    }
+    public void execute(String email, OtpPurpose purpose) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
 
-    /**
-     * Generates an OTP for a user identified by their UUID.
-     * Used internally (e.g. post-registration flow).
-     */
-    @Transactional
-    public OtpResponse execute(UUID userId, OtpPurpose purpose) {
+        if (userOpt.isEmpty()) {
+            return;
+        }
 
-        Optional<Otp> latestOtp = otpRepository.findLatestByUserId(userId);
+        UUID userId = userOpt.get().getId();
 
-        if (latestOtp.isPresent()) {
-            OffsetDateTime cooldownTime = latestOtp.get().getCreatedAt().plusSeconds(cooldownSeconds);
-            if (OffsetDateTime.now().isBefore(cooldownTime)) {
-                throw new OtpRateLimitExceededException("Please wait before requesting another OTP");
-            }
+        Otp previousOtp = otpRepository.findLatestByUserIdAndPurpose(userId, purpose)
+                .orElseThrow(NoPreviousOtpException::new);
+
+        OffsetDateTime resendDeadline = previousOtp.getExpiresAt().plusMinutes(resendGraceMinutes);
+        if (OffsetDateTime.now().isAfter(resendDeadline)) {
+            throw new NoPreviousOtpException();
+        }
+
+        OffsetDateTime cooldownTime = previousOtp.getCreatedAt().plusSeconds(cooldownSeconds);
+        if (OffsetDateTime.now().isBefore(cooldownTime)) {
+            throw new OtpRateLimitExceededException("Please wait before requesting another OTP");
         }
 
         long countInLastHour = otpRepository.countByUserIdAndCreatedAtAfter(userId, OffsetDateTime.now().minusHours(1));
@@ -69,7 +72,7 @@ public class GenerateOtpUseCase {
 
         otpRepository.cancelActiveByUserIdAndPurpose(userId, purpose);
 
-        String code = generateCode();
+        String code = String.format("%06d", new SecureRandom().nextInt(1_000_000));
 
         Otp otp = Otp.builder()
                 .id(UUID.randomUUID())
@@ -82,16 +85,6 @@ public class GenerateOtpUseCase {
                 .expiresAt(OffsetDateTime.now().plusMinutes(expirationMinutes))
                 .build();
 
-        Otp saved = otpRepository.save(otp);
-
-        return OtpResponse.builder()
-                .message("OTP has been sent.")
-                .purpose(saved.getPurpose())
-                .expiresAt(saved.getExpiresAt())
-                .build();
-    }
-
-    private String generateCode() {
-        return String.format("%06d", new SecureRandom().nextInt(1_000_000));
+        otpRepository.save(otp);
     }
 }

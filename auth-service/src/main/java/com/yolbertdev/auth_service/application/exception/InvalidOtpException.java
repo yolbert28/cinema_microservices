@@ -5,4 +5,8 @@ public class InvalidOtpException extends AuthServiceException {
     public InvalidOtpException() {
         super("Invalid or expired OTP code");
     }
+
+    public InvalidOtpException(String message) {
+        super(message);
+    }
 }
