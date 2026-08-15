@@ -1,0 +1,42 @@
+services:
+  movie_app:
+    container_name: movie_service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - ${APP_PORT:-10002}:3000
+    environment:
+      - DB_HOST=movie_db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-movie_db}
+      - DB_USERNAME=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASS}
+    networks:
+      - movie_network
+    depends_on:
+      movie_db:
+        condition: service_healthy
+
+  movie_db:
+    image: postgres:18
+    environment:
+      - POSTGRES_DB=${DB_NAME:-movie_db}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    networks:
+      - movie_network
+    volumes:
+      - movie_pg_data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-movie_db}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  movie_network:
+
+volumes:
+  movie_pg_data:
