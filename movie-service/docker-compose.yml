@@ -13,6 +13,7 @@ services:
       - DB_NAME=${DB_NAME:-movie_db}
       - DB_USERNAME=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASS}
+      - DB_SYNC=false
     networks:
       - movie_network
     depends_on:

@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Cinema } from './entities/cinema.entity';
 import { CreateCinemaDto } from './dto/create-cinema.dto';
 import { UpdateCinemaDto } from './dto/update-cinema.dto';
 
 @Injectable()
 export class CinemaService {
-  create(createCinemaDto: CreateCinemaDto) {
-    return 'This action adds a new cinema';
+
+  constructor(
+    @InjectRepository(Cinema)
+    private cinemaRepository: Repository<Cinema>
+  ) {}
+  async create(createCinemaDto: CreateCinemaDto) {
+    const newEntity = this.cinemaRepository.create(createCinemaDto);
+    return await this.cinemaRepository.save(newEntity);
   }
 
-  findAll() {
-    return `This action returns all cinema`;
+  async findAll(): Promise<Cinema[]> {
+    return await this.cinemaRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cinema`;
+  async findOne(id: string): Promise<Cinema | null> {
+    return await this.cinemaRepository.findOne({ where: { id } as any });
+  } cinema`;
   }
 
-  update(id: number, updateCinemaDto: UpdateCinemaDto) {
-    return `This action updates a #${id} cinema`;
+  async update(id: string, updateCinemaDto: UpdateCinemaDto) {
+    await this.cinemaRepository.update(id, updateCinemaDto as any);
+    return this.findOne(id);
+  } cinema`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cinema`;
+  async remove(id: string): Promise<void> {
+    await this.cinemaRepository.delete(id);
+  } cinema`;
   }
 }

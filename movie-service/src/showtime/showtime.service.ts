@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Showtime } from './entities/showtime.entity';
 import { CreateShowtimeDto } from './dto/create-showtime.dto';
 import { UpdateShowtimeDto } from './dto/update-showtime.dto';
 
 @Injectable()
 export class ShowtimeService {
-  create(createShowtimeDto: CreateShowtimeDto) {
-    return 'This action adds a new showtime';
+
+  constructor(
+    @InjectRepository(Showtime)
+    private showtimeRepository: Repository<Showtime>
+  ) {}
+  async create(createShowtimeDto: CreateShowtimeDto) {
+    const newEntity = this.showtimeRepository.create(createShowtimeDto);
+    return await this.showtimeRepository.save(newEntity);
   }
 
-  findAll() {
-    return `This action returns all showtime`;
+  async findAll(): Promise<Showtime[]> {
+    return await this.showtimeRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} showtime`;
+  async findOne(id: string): Promise<Showtime | null> {
+    return await this.showtimeRepository.findOne({ where: { id } as any });
+  } showtime`;
   }
 
-  update(id: number, updateShowtimeDto: UpdateShowtimeDto) {
-    return `This action updates a #${id} showtime`;
+  async update(id: string, updateShowtimeDto: UpdateShowtimeDto) {
+    await this.showtimeRepository.update(id, updateShowtimeDto as any);
+    return this.findOne(id);
+  } showtime`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} showtime`;
+  async remove(id: string): Promise<void> {
+    await this.showtimeRepository.delete(id);
+  } showtime`;
   }
 }

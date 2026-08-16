@@ -1,4 +1,8 @@
 services:
+  movie_app:
+    environment:
+      - DB_SYNC=true
+
   movie_db:
     ports:
       - ${DB_PORT:-5432}:5432
